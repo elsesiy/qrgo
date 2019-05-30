@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "qrgo.go",
+      "use": "@now/go"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "qrgo.go"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "qrgo.go"
+    }
+  ]
+}
