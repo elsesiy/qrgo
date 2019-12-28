@@ -53,14 +53,6 @@ func TestGETQRCodeHTML(t *testing.T) {
 		"valid path param": {"abc", `<!DOCTYPE html>
 <html>
 <head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-104096180-2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-104096180-2');
-</script>
 <title>qrgo</title>
 </head>
 <body style='background-color: black;color:white;'>
@@ -75,14 +67,6 @@ func TestGETQRCodeHTML(t *testing.T) {
 		"empty param": {"", `<!DOCTYPE html>
 <html>
 <head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-104096180-2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-104096180-2');
-</script>
 <title>qrgo</title>
 </head>
 <body style='background-color: black;color:white;'>
@@ -114,6 +98,25 @@ $ curl -L qrgo.elsesiy.com/abc
 			want := v.expectedBody
 
 			assertResult(t, got, want)
+		})
+	}
+}
+
+func TestFixRequestPath(t *testing.T) {
+	tests := map[string]struct {
+		pathParam string
+		want      string
+	}{
+		"fix http scheme":               {"https:/google.com", "https://google.com"},
+		"fix mutliple subpaths":         {"https:/elsesiy.com/about", "https://elsesiy.com/about"},
+		"fix other scheme":              {"ftp:/localhost:21", "ftp://localhost:21"},
+		"no action since path is valid": {"http://google.com", "http://google.com"},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := FixRequestPath(test.pathParam)
+			assertResult(t, got, test.want)
 		})
 	}
 }

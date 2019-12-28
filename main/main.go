@@ -15,6 +15,6 @@ func main() {
 
 	handler := http.HandlerFunc(qrgo.QRServer)
 	if err := http.ListenAndServe(":"+port, handler); err != nil {
-		log.Fatalf("couldn't bind port 3000 - %v", err)
+		log.Fatalf("couldn't bind port %s - %v", port, err)
 	}
 }

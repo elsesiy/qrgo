@@ -7,6 +7,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -21,14 +22,6 @@ var plainTextUserAgents = []string{"curl", "wget", "fetch", "httpie"}
 var tmpl = `<!DOCTYPE html>
 <html>
 <head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-104096180-2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-104096180-2');
-</script>
 <title>qrgo</title>
 </head>
 <body style='background-color: black;color:white;'>
@@ -69,16 +62,15 @@ func QRServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func plainTextHandler(w http.ResponseWriter, r *http.Request) {
-	// Get Path
-	queryString := r.URL.Path[1:]
+	pathParam := r.URL.Path[1:]
 
-	if queryString == "" {
+	if pathParam == "" {
 		_, _ = fmt.Fprint(w, ErrMissingParam)
 		return
 	}
 
-	res, err := getQRCodeFromCommand(queryString, false)
-
+	pathParam = FixRequestPath(pathParam)
+	res, err := getQRCodeFromCommand(pathParam, false)
 	if err != nil {
 		_, _ = fmt.Fprint(w, err)
 		return
@@ -96,15 +88,15 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get Path
-	queryString := r.URL.Path[1:]
+	pathParam := r.URL.Path[1:]
 
-	if queryString == "" || queryString == "favicon.ico" {
+	if pathParam == "" || pathParam == "favicon.ico" {
 		_ = tpl.Execute(w, result)
 		return
 	}
 
-	res, err := getQRCodeFromCommand(queryString, true)
+	pathParam = FixRequestPath(pathParam)
+	res, err := getQRCodeFromCommand(pathParam, true)
 	if err != nil {
 		_, _ = fmt.Fprint(w, err)
 		return
@@ -141,4 +133,16 @@ func isPlainTextResponse(ua string) bool {
 	}
 
 	return false
+}
+
+// FixRequestPath rectifies issues caused by https://github.com/zeit/now/issues/3086
+func FixRequestPath(path string) string {
+	u, _ := url.ParseRequestURI(path)
+	if u != nil && (u.Scheme == "" || u.Host == "") {
+		components := strings.SplitN(path, "/", 2)
+		res := components[0] + "//" + components[1]
+		return res
+	}
+
+	return path
 }

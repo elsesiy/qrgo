@@ -6,14 +6,14 @@
       "use": "@now/go"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "qrgo.go"
+      "source": "/(.*)",
+      "destination": "/qrgo.go"
     },
     {
-      "src": "/(.*)",
-      "dest": "qrgo.go"
+      "source": "/",
+      "destination": "/qrgo.go"
     }
   ]
 }
