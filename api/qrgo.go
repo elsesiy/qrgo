@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/skip2/go-qrcode"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/skip2/go-qrcode"
 )
 
 // ErrMissingParam is returned if path param evaluation results empty

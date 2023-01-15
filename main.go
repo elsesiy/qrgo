@@ -1,10 +1,11 @@
 package main
 
 import (
-	"elsesiy/qrgo"
 	"log"
 	"net/http"
 	"os"
+
+	qrgo "github.com/elsesiy/qrgo/api"
 )
 
 func main() {

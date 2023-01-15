@@ -1,13 +1,13 @@
-FROM golang:1.13 AS build-env
+FROM golang:1.18 AS build-env
 
 WORKDIR /qrgo
-COPY qrgo.go go.mod go.sum ./
-COPY main ./main
+COPY main.go go.mod go.sum ./
+COPY api ./api
 
 RUN bash -c "go mod download &> /dev/null"
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o app -ldflags "-s -w" ./main
+RUN CGO_ENABLED=0 GOOS=linux go build -o app -ldflags "-s -w" ./
 
-FROM gcr.io/distroless/static:latest
+FROM gcr.io/distroless/static:nonroot
 COPY --from=build-env /qrgo/app .
 CMD ["./app"]
