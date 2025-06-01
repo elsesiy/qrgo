@@ -7,9 +7,9 @@ jobs:
     name: test
     runs-on: ubuntu-22.04
     container:
-      image: golang:1.20
+      image: golang:1.24
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Test
         run: go test -count=1 -v -short -race -timeout 30s ./...

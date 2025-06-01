@@ -18,7 +18,7 @@ var ErrMissingParam = errors.New("no content provided for encoding")
 // ErrEncodingFailed is returned if the query couldn't be successfully encoded
 var ErrEncodingFailed = errors.New("couldn't encode provided content")
 
-var plainTextUserAgents = []string{"curl", "wget", "fetch", "httpie"}
+var plainTextUserAgents = []string{"curl", "wget", "fetch", "httpie", "xh"}
 
 var tmpl = `<!DOCTYPE html>
 <html>
