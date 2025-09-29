@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/skip2/go-qrcode"
@@ -19,6 +21,10 @@ var ErrMissingParam = errors.New("no content provided for encoding")
 var ErrEncodingFailed = errors.New("couldn't encode provided content")
 
 var plainTextUserAgents = []string{"curl", "wget", "fetch", "httpie", "xh"}
+
+func init() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+}
 
 var tmpl = `<!DOCTYPE html>
 <html>
@@ -52,6 +58,8 @@ type Result struct {
 
 // QRServer is the main http handler
 func QRServer(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Request received", "method", r.Method, "path_length", len(r.URL.Path), "user_agent", r.Header.Get("User-Agent"))
+
 	// Determine User-Agent
 	agent := r.Header.Get("User-Agent")
 	plainTextResponse := isPlainTextResponse(agent)
@@ -67,6 +75,7 @@ func plainTextHandler(w http.ResponseWriter, r *http.Request) {
 	pathParam := r.URL.Path[1:]
 
 	if pathParam == "" {
+		slog.Error("Missing param", "error", ErrMissingParam.Error())
 		_, _ = fmt.Fprint(w, ErrMissingParam)
 		return
 	}
@@ -74,10 +83,12 @@ func plainTextHandler(w http.ResponseWriter, r *http.Request) {
 	pathParam = FixRequestPath(pathParam)
 	res, err := getQRCodeFromCommand(pathParam, false)
 	if err != nil {
+		slog.Error("Encoding failed", "content_length", len(pathParam), "error", err.Error())
 		_, _ = fmt.Fprint(w, err)
 		return
 	}
 
+	slog.Info("QR code generated", "content_length", len(pathParam), "format", "text")
 	_, _ = fmt.Fprint(w, res)
 }
 
@@ -86,6 +97,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
 
 	tpl, err := template.New("result").Parse(tmpl)
 	if err != nil {
+		slog.Error("Template parse failed", "error", err.Error())
 		_, _ = fmt.Fprint(w, err)
 		return
 	}
@@ -93,6 +105,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
 	pathParam := r.URL.Path[1:]
 
 	if pathParam == "" || pathParam == "favicon.ico" {
+		slog.Info("Serving default page")
 		_ = tpl.Execute(w, result)
 		return
 	}
@@ -100,11 +113,13 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
 	pathParam = FixRequestPath(pathParam)
 	res, err := getQRCodeFromCommand(pathParam, true)
 	if err != nil {
+		slog.Error("Encoding failed", "content_length", len(pathParam), "error", err.Error())
 		_, _ = fmt.Fprint(w, err)
 		return
 	}
 
 	result.QRCode = res
+	slog.Info("QR code generated", "content_length", len(pathParam), "format", "png")
 	_ = tpl.Execute(w, result)
 }
 
